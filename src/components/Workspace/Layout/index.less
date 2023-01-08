@@ -1,0 +1,18 @@
+.nuwa-workspace-layout {
+  height: 100%;
+}
+
+.nuwa-workspace-layout--body {
+  flex: 1;
+}
+
+.nuwa-workspace-layout--right-sidebar {
+  display: flex;
+  flex-direction: column;
+  padding-left: @editor-gutter;
+  width: @right-sidebar-width;
+
+  .nuwa-editor:not(:last-child) {
+    margin-bottom: @editor-gutter;
+  }
+}
