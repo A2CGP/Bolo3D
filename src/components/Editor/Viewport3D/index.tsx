@@ -30,13 +30,13 @@ const Viewport3D = () => {
         canvas.width = width;
         canvas.height = height;
         renderer = new A2WebGLRenderer(canvas);
-        scene = new A2Scene();
         camera = new A2PerspectiveCamera(Math.PI * 0.4, width / height);
+        scene = new A2Scene(renderer, camera);
         globals.current = { canvas, renderer, scene, camera };
         onInit();
       }
       function render() {
-        renderer.render(scene, camera);
+        scene.render();
         requestAnimationFrame(render);
       }
       render();

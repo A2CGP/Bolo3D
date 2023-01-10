@@ -80,13 +80,14 @@ class WebGLRenderer {
   needsUpdatePicking = true;
   outlineProgram: WebGLProgram;
 
-  constructor(canvas: HTMLCanvasElement, options?: WebGLContextAttributes) {
+  constructor(canvas: HTMLCanvasElement, options: WebGLContextAttributes = {}) {
     const { width, height } = canvas;
     const gl = canvas.getContext('webgl2', {
       powerPreference: "high-performance",
       antialias: true,
       depth: true,
-      alpha: false
+      alpha: false,
+      ...options,
     });
 
     if (!gl) throw new Error('Your current browser does not support WebGL2!');
