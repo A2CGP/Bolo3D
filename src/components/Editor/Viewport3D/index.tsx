@@ -1,10 +1,11 @@
 import { useEffect, useRef } from 'react';
 import ToolBar from '@/components/ToolBar';
-import A2WebGLRenderer from '@/renderers/A2WebGLRenderer';
+import A2Renderer from '@/classes/A2Renderer';
+import A2SceneBase from '@/classes/A2SceneBase';
 import A2Scene from '@/scenes/A2Scene';
 import A2Camera from '@/cameras/A2Camera';
 import A2PerspectiveCamera from '@/cameras/A2PerspectiveCamera';
-import globals from './globals';
+import A2GlobalContext from '@/globals/A2GlobalContext';
 import { onInit } from './events';
 import './index.less';
 
@@ -13,15 +14,13 @@ const Viewport3D = () => {
 
   useEffect(() => {
     if (canvasRef.current) {
-      const current = globals.current;
-      let renderer: A2WebGLRenderer;
-      let scene: A2Scene;
+      const current = A2GlobalContext.current.viewport;
+      let renderer: A2Renderer;
+      let scene: A2SceneBase;
       let camera: A2Camera;
 
       if (current) {
-        renderer = current.renderer;
         scene = current.scene;
-        camera = current.camera;
       } else {
         const canvas = canvasRef.current;
         const width = canvas.clientWidth * devicePixelRatio;
@@ -29,10 +28,10 @@ const Viewport3D = () => {
 
         canvas.width = width;
         canvas.height = height;
-        renderer = new A2WebGLRenderer(canvas);
+        renderer = A2GlobalContext.createRenderer(canvas);
         camera = new A2PerspectiveCamera(Math.PI * 0.4, width / height);
         scene = new A2Scene(renderer, camera);
-        globals.current = { canvas, renderer, scene, camera };
+        A2GlobalContext.current.viewport = { scene };
         onInit();
       }
       function render() {
@@ -49,6 +48,7 @@ const Viewport3D = () => {
         <ToolBar />
       </div>
       <canvas ref={canvasRef} className='nuwa-editor-viewport3d--canvas'></canvas>
+      <div id='editor-contextmenu'></div>
     </div>
   );
 };

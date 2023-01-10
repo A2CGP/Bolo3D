@@ -46,6 +46,7 @@ class A2CubeGeometry extends A2Geometry {
 class A2MeshCube extends A2Mesh {
   constructor() {
     super(new A2CubeGeometry());
+    this.displayName = `Cube${this.objectId}`;
   }
 }
 

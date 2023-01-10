@@ -1,5 +1,6 @@
 import A2Camera from '@/cameras/A2Camera';
 import A2DrawableObject from '@/classes/A2DrawableObject';
+import A2Mesh from '@/classes/A2Mesh';
 import A2Renderer from '@/classes/A2Renderer';
 import A2SceneBase from '@/classes/A2SceneBase';
 import { Color3 } from '@/numerics/Color';
@@ -12,31 +13,40 @@ class A2Scene extends A2SceneBase {
   clearColor = new Color3(0.24, 0.24, 0.24);
   objectMaps = new Map<number, A2DrawableObject>();
 
-  private renderer: A2Renderer;
-  private camera: A2Camera;
-
   constructor(renderer: A2Renderer, camera: A2Camera) {
-    super();
-    this.renderer = renderer;
-    this.camera = camera;
+    super(renderer, camera);
 
-    const sphere = new A2MeshUVSphere();
-    const torus = new A2MeshTorus();
-
-    sphere.modelMatrix.translate(0, 0, -3.0);
-    torus.modelMatrix.translate(0, 0, 3.0);
     this.add(new A2Floor());
     this.add(new A2MeshCube());
-    this.add(sphere);
-    this.add(torus);
+    this.on('menu-add', (key: string) => {
+      let item: A2Mesh | null = null;
+
+      switch (key) {
+        case 'Cube':
+          item = new A2MeshCube();
+          break;
+        case 'UVSphere':
+          item = new A2MeshUVSphere();
+          break;
+        case 'Torus':
+          item = new A2MeshTorus();
+          break;
+      }
+      if (item) {
+        item.modelMatrix.translate(-Math.random() * 10.0, Math.random() * 5.0, -Math.random() * 10.0);
+        this.add(item);
+      }
+    });
   }
 
   add(object: A2DrawableObject) {
     this.objectMaps.set(object.objectId, object);
+    this.emit('add', object);
   }
 
   delete(object: A2DrawableObject) {
     this.objectMaps.delete(object.objectId);
+    this.emit('delete', object);
   }
 
   render() {

@@ -19,6 +19,7 @@ class A2Mesh extends A2DrawableObject {
   constructor(geometry: A2Geometry) {
     super();
     this.geometry = geometry;
+    this.displayName = `Mesh${this.objectId}`;
   }
 }
 

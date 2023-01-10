@@ -60,6 +60,7 @@ class A2MeshTorus extends A2Mesh {
 
   constructor(radius?: number) {
     super(new A2TorusGeometry(radius));
+    this.displayName = `Torus${this.objectId}`;
   }
 }
 

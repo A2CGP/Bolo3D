@@ -51,6 +51,7 @@ class A2MeshUVSphere extends A2Mesh {
 
   constructor(radius?: number) {
     super(new A2UVSphereGeometry(radius));
+    this.displayName = `Sphere${this.objectId}`;
   }
 }
 

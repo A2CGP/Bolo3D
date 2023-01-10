@@ -7,12 +7,14 @@ export enum A2ShadeMode {
 }
 
 class A2DrawableObject extends A2Object {
+  displayName: string;
   primitiveMode = A2PrimitiveMode.TRIANGLES;
   shadeMode = A2ShadeMode.Flat;
   selected = false;
 
   constructor(type = A2ObjectType.Mesh) {
     super(type);
+    this.displayName = `Object${this.objectId}`;
   }
 }
 
