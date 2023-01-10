@@ -20,10 +20,8 @@ class A2FloorGeometry extends A2Geometry {
       vertices.push(-half, 0, i, half, 0, i);
       indices.push(index++, index++);
     }
-    this.indices = new Uint32Array(indices);
-    this.countOfIndices = indices.length;
-    this.vertices = new Float32Array(vertices);
-    this.countOfVertices = vertices.length;
+    this.setFlatLineIndices(indices);
+    this.setFlatVertices(vertices);
   }
 }
 

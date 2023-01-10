@@ -1,10 +1,14 @@
 import A2Camera from '@/cameras/A2Camera';
+import A2DrawableObject, { A2ShadeMode } from '@/classes/A2DrawableObject';
 import A2Mesh from '@/classes/A2Mesh';
 import { A2ObjectType } from '@/classes/A2Object';
 import { A2PrimitiveMode } from '@/classes/A2Primitive';
+import A2Floor from '@/objects/A2Floor';
 import A2Scene from '@/scenes/A2Scene';
 import BlinnPhong from '@/shaders/BlinnPhong';
 import ColorOnly from '@/shaders/ColorOnly';
+import Outline from '@/shaders/Outline';
+import Picking from '@/shaders/Picking';
 
 class State {
   program: WebGLProgram;
@@ -68,17 +72,56 @@ class WebGLRenderer {
   context: WebGL2RenderingContext;
   states = new Map<number, State>();
   shaders = new Map();
+  pickingFBO: WebGLFramebuffer;
+  pickingColorTexture: WebGLTexture;
+  depthTexture: WebGLTexture;
+  pickingProgram: WebGLProgram;
+  pickingPosition = { x: 0, y: 0 };
+  needsUpdatePicking = true;
+  outlineProgram: WebGLProgram;
 
   constructor(canvas: HTMLCanvasElement, options?: WebGLContextAttributes) {
-    const context = canvas.getContext('webgl2', options);
+    const { width, height } = canvas;
+    const gl = canvas.getContext('webgl2', {
+      powerPreference: "high-performance",
+      antialias: true,
+      depth: true,
+      alpha: false
+    });
 
-    if (!context) throw new Error('Your current browser does not support WebGL2!');
-    context.viewport(0, 0, canvas.width, canvas.height);
+    if (!gl) throw new Error('Your current browser does not support WebGL2!');
+    gl.viewport(0, 0, width, height);
     this.canvas = canvas;
-    this.context = context;
-    context.enable(context.DEPTH_TEST);
-    context.enable(context.BLEND);
-    context.blendFunc(context.SRC_ALPHA, context.ONE_MINUS_SRC_ALPHA);
+    this.context = gl;
+    gl.enable(gl.DEPTH_TEST);
+    const fbo = gl.createFramebuffer();
+    if (!fbo) throw 'Failed to create fbo!';
+    this.pickingFBO = fbo;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    let texture = gl.createTexture();
+    if (!texture) throw 'Failed to create texture!';
+    this.pickingColorTexture = texture;
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+    texture = gl.createTexture();
+    if (!texture) throw 'Failed to create texture!';
+    this.depthTexture = texture;
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT32F, width, height, 0, gl.DEPTH_COMPONENT, gl.FLOAT, null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, texture, 0);
+    this.pickingProgram = this.createProgram(Picking.vertex, Picking.fragment);
+    this.states.set(0, new State(gl, this.pickingProgram));
+    this.outlineProgram = this.createProgram(Outline.vertex, Outline.fragment);
+    this.states.set(-1, new State(gl, this.outlineProgram));
+
+    canvas.addEventListener('click', (e) => {
+      this.pickingPosition.x = e.offsetX / canvas.clientWidth * width;
+      this.pickingPosition.y = (1 - e.offsetY / canvas.clientHeight) * height;
+      this.needsUpdatePicking = true;
+    });
   }
 
   createProgram(vertex: string, fragment: string) {
@@ -107,15 +150,88 @@ class WebGLRenderer {
     return program;
   }
 
+  selectedObjects: Set<A2DrawableObject> = new Set();
+
   render(scene: A2Scene, camera: A2Camera) {
     const gl = this.context;
     const { r, g, b } = scene.clearColor;
 
+    if (this.needsUpdatePicking) {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.pickingFBO);
+      gl.clearColor(0, 0, 0, 0);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+      this.renderPicking(scene, camera);
+      this.needsUpdatePicking = false;
+      const data = new Uint8Array(4);
+      gl.readPixels(this.pickingPosition.x, this.pickingPosition.y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, data);
+      const id = data[0] + (data[1] << 8) + (data[2] << 16) + (data[3] << 24);
+      this.selectedObjects.forEach((object) => {
+        object.selected = false;
+      });
+      this.selectedObjects.clear();
+      if (id > 0) {
+        scene.objectMaps.forEach((object) => {
+          if (object.objectId === id) {
+            object.selected = true;
+            this.selectedObjects.add(object);
+          }
+        });
+      }
+    }
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.clearColor(r, g, b, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     scene.objectMaps.forEach(object => {
       if (object.objectType === A2ObjectType.Mesh) {
         this.renderMesh(object as A2Mesh, camera, scene);
+      }
+    });
+  }
+
+  renderPicking(scene: A2Scene, camera: A2Camera) {
+    const gl = this.context;
+    const state = this.states.get(0)!;
+
+    gl.useProgram(this.pickingProgram);
+    gl.bindVertexArray(state.VAO);
+    gl.uniformMatrix4fv(state.locations['uProjectionMatrix'], false, camera.projectionMatrix.elements);
+    gl.uniformMatrix4fv(state.locations['uViewMatrix'], false, camera.viewMatrix.elements);
+    scene.objectMaps.forEach(object => {
+      if (object.objectType === A2ObjectType.Mesh && !(object instanceof A2Floor)) {
+        const mesh = object as A2Mesh;
+        const id = mesh.objectId;
+
+        gl.uniform4f(state.locations['uColor'], (id & 0xff) / 0xff, ((id >> 8) & 0xff) / 0xff, ((id >> 16) & 0xff) / 0xff, ((id >> 24) & 0xff) / 0xff);
+        gl.uniformMatrix4fv(state.locations['uModelMatrix'], false, mesh.modelMatrix.elements);
+        if (mesh.primitiveMode === A2PrimitiveMode.LINES) {
+          if (mesh.shadeMode === A2ShadeMode.Smooth) {
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, state.VBOs.get('index') || null);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.geometry.smoothLineIndices, gl.STATIC_DRAW);
+            gl.bindBuffer(gl.ARRAY_BUFFER, state.VBOs.get('position') || null);
+            gl.bufferData(gl.ARRAY_BUFFER, mesh.geometry.smoothVertices, gl.STATIC_DRAW);
+            gl.drawElements(gl.LINES, mesh.geometry.smoothLineIndicesCount, gl.UNSIGNED_INT, 0);
+          } else {
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, state.VBOs.get('index') || null);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.geometry.flatLineIndices, gl.STATIC_DRAW);
+            gl.bindBuffer(gl.ARRAY_BUFFER, state.VBOs.get('position') || null);
+            gl.bufferData(gl.ARRAY_BUFFER, mesh.geometry.flatVertices, gl.STATIC_DRAW);
+            gl.drawElements(gl.LINES, mesh.geometry.flatLineIndicesCount, gl.UNSIGNED_INT, 0);
+          }
+        } else {
+          if (mesh.shadeMode === A2ShadeMode.Smooth) {
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, state.VBOs.get('index') || null);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.geometry.smoothIndices, gl.STATIC_DRAW);
+            gl.bindBuffer(gl.ARRAY_BUFFER, state.VBOs.get('position') || null);
+            gl.bufferData(gl.ARRAY_BUFFER, mesh.geometry.smoothVertices, gl.STATIC_DRAW);
+            gl.drawElements(gl.TRIANGLES, mesh.geometry.smoothIndicesCount, gl.UNSIGNED_INT, 0);
+          } else {
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, state.VBOs.get('index') || null);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.geometry.flatIndices, gl.STATIC_DRAW);
+            gl.bindBuffer(gl.ARRAY_BUFFER, state.VBOs.get('position') || null);
+            gl.bufferData(gl.ARRAY_BUFFER, mesh.geometry.flatVertices, gl.STATIC_DRAW);
+            gl.drawElements(gl.TRIANGLES, mesh.geometry.flatIndicesCount, gl.UNSIGNED_INT, 0);
+          }
+        }
       }
     });
   }
@@ -132,25 +248,77 @@ class WebGLRenderer {
         state = new State(gl, this.createProgram(BlinnPhong.vertex, BlinnPhong.fragment), true);
         gl.bindVertexArray(state.VAO);
         gl.bindBuffer(gl.ARRAY_BUFFER, state.VBOs.get('normal') || null);
-        gl.bufferData(gl.ARRAY_BUFFER, mesh.geometry.vertexNormals, gl.STATIC_DRAW);
+        if (mesh.shadeMode === A2ShadeMode.Smooth) {
+          gl.bufferData(gl.ARRAY_BUFFER, mesh.geometry.smoothNormals, gl.STATIC_DRAW);
+        } else {
+          gl.bufferData(gl.ARRAY_BUFFER, mesh.geometry.flatNormals, gl.STATIC_DRAW);
+        }
       }
       this.states.set(mesh.objectId, state);
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, state.VBOs.get('index') || null);
-      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.geometry.indices, gl.STATIC_DRAW);
+      if (mesh.shadeMode === A2ShadeMode.Smooth) {
+        if (mesh.primitiveMode === A2PrimitiveMode.LINES) {
+          gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.geometry.smoothLineIndices, gl.STATIC_DRAW);
+        } else {
+          gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.geometry.smoothIndices, gl.STATIC_DRAW);
+        }
+      } else {
+        if (mesh.primitiveMode === A2PrimitiveMode.LINES) {
+          gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.geometry.flatLineIndices, gl.STATIC_DRAW);
+        } else {
+          gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.geometry.flatIndices, gl.STATIC_DRAW);
+        }
+      }
       gl.bindBuffer(gl.ARRAY_BUFFER, state.VBOs.get('position') || null);
-      gl.bufferData(gl.ARRAY_BUFFER, mesh.geometry.vertices, gl.STATIC_DRAW);
+      if (mesh.shadeMode === A2ShadeMode.Smooth) {
+        gl.bufferData(gl.ARRAY_BUFFER, mesh.geometry.smoothVertices, gl.STATIC_DRAW);
+      } else {
+        gl.bufferData(gl.ARRAY_BUFFER, mesh.geometry.flatVertices, gl.STATIC_DRAW);
+      }
+    }
+    if (mesh.selected) {
+      const ostate = this.states.get(-1)!;
+      gl.useProgram(this.outlineProgram);
+      gl.uniformMatrix4fv(ostate.locations['uProjectionMatrix'], false, camera.projectionMatrix.elements);
+      gl.uniformMatrix4fv(ostate.locations['uViewMatrix'], false, camera.viewMatrix.elements);
+      gl.uniformMatrix4fv(ostate.locations['uModelMatrix'], false, mesh.modelMatrix.elements);
+      gl.bindVertexArray(ostate.VAO);
+      gl.enable(gl.CULL_FACE);
+      gl.cullFace(gl.FRONT);
+      if (mesh.shadeMode === A2ShadeMode.Smooth) {
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ostate.VBOs.get('index') || null);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.geometry.smoothIndices, gl.STATIC_DRAW);
+        gl.bindBuffer(gl.ARRAY_BUFFER, ostate.VBOs.get('position') || null);
+        gl.bufferData(gl.ARRAY_BUFFER, mesh.geometry.smoothVertices, gl.STATIC_DRAW);
+        gl.drawElements(gl.TRIANGLES, mesh.geometry.smoothIndicesCount, gl.UNSIGNED_INT, 0);
+      } else {
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ostate.VBOs.get('index') || null);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.geometry.flatIndices, gl.STATIC_DRAW);
+        gl.bindBuffer(gl.ARRAY_BUFFER, ostate.VBOs.get('position') || null);
+        gl.bufferData(gl.ARRAY_BUFFER, mesh.geometry.flatVertices, gl.STATIC_DRAW);
+        gl.drawElements(gl.TRIANGLES, mesh.geometry.flatIndicesCount, gl.UNSIGNED_INT, 0);
+      }
+      gl.disable(gl.CULL_FACE);
     }
     gl.useProgram(state.program);
     gl.uniformMatrix4fv(state.locations['uProjectionMatrix'], false, camera.projectionMatrix.elements);
     gl.uniformMatrix4fv(state.locations['uViewMatrix'], false, camera.viewMatrix.elements);
     gl.uniformMatrix4fv(state.locations['uModelMatrix'], false, mesh.modelMatrix.elements);
-    gl.uniform3f(state.locations['uColor'], mesh.color.r, mesh.color.g, mesh.color.b);
+    gl.uniform3fv(state.locations['uColor'], mesh.color.elements);
     gl.bindVertexArray(state.VAO);
     if (mesh.primitiveMode === A2PrimitiveMode.LINES) {
-      gl.drawElements(gl.LINES, mesh.geometry.countOfIndices, gl.UNSIGNED_INT, 0);
+      if (mesh.shadeMode === A2ShadeMode.Smooth) {
+        gl.drawElements(gl.LINES, mesh.geometry.smoothLineIndicesCount, gl.UNSIGNED_INT, 0);
+      } else {
+        gl.drawElements(gl.LINES, mesh.geometry.flatLineIndicesCount, gl.UNSIGNED_INT, 0);
+      }
     } else {
       gl.uniform3f(state.locations['uEye'], camera.position.x, camera.position.y, camera.position.z);
-      gl.drawElements(gl.TRIANGLES, mesh.geometry.countOfIndices, gl.UNSIGNED_INT, 0);
+      if (mesh.shadeMode === A2ShadeMode.Smooth) {
+        gl.drawElements(gl.TRIANGLES, mesh.geometry.smoothIndicesCount, gl.UNSIGNED_INT, 0);
+      } else {
+        gl.drawElements(gl.TRIANGLES, mesh.geometry.flatIndicesCount, gl.UNSIGNED_INT, 0);
+      }
     }
   }
 }

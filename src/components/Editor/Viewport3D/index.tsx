@@ -24,10 +24,11 @@ const Viewport3D = () => {
         camera = current.camera;
       } else {
         const canvas = canvasRef.current;
-        const { width, height } = canvas.getBoundingClientRect();
+        const width = canvas.clientWidth * devicePixelRatio;
+        const height = canvas.clientHeight * devicePixelRatio;
 
-        canvas.width = width * devicePixelRatio;
-        canvas.height = height * devicePixelRatio;
+        canvas.width = width;
+        canvas.height = height;
         renderer = new A2WebGLRenderer(canvas);
         scene = new A2Scene();
         camera = new A2PerspectiveCamera(Math.PI * 0.4, width / height);

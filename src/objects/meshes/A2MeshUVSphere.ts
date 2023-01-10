@@ -1,3 +1,4 @@
+import { A2ShadeMode } from '@/classes/A2DrawableObject';
 import A2Geometry, { A2GeometryType } from '@/classes/A2Geometry';
 import A2Mesh from '@/classes/A2Mesh';
 
@@ -38,16 +39,16 @@ class A2UVSphereGeometry extends A2Geometry {
         if (i != (maxV - 1)) indices.push(k2 + 1, k2, k1);
       }
     }
-    this.indices = new Uint32Array(indices);
-    this.countOfIndices = indices.length;
-    this.vertices = new Float32Array(vertices);
-    this.countOfVertices = vertices.length;
-    this.vertexNormals = new Float32Array(normals);
-    this.uvs = new Float32Array(uvs);
+    this.setSmoothIndices(indices);
+    this.setSmoothVertices(vertices);
+    this.setSmoothNormals(normals);
+    this.setSmoothUVs(uvs);
   }
 }
 
 class A2MeshUVSphere extends A2Mesh {
+  shadeMode = A2ShadeMode.Smooth;
+
   constructor(radius?: number) {
     super(new A2UVSphereGeometry(radius));
   }
