@@ -1,0 +1,133 @@
+@font-face {
+  font-family: "iconfont"; /* Project id  */
+  src: url('/iconfont.ttf?t=1673366178739') format('truetype');
+}
+
+.iconfont {
+  font-family: "iconfont" !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-shading-material:before {
+  content: "\f007b";
+}
+
+.icon-shading-rendered:before {
+  content: "\f00b9";
+}
+
+.icon-outliner-mesh:before {
+  content: "\e7f7";
+}
+
+.icon-toolbar-select:before {
+  content: "\e748";
+}
+
+.icon-shading-solid:before {
+  content: "\e64f";
+}
+
+.icon-editor-outliner:before {
+  content: "\e6f0";
+}
+
+.icon-mesh-torus:before {
+  content: "\e616";
+}
+
+.icon-deng:before {
+  content: "\e66d";
+}
+
+.icon-shading-wireframe:before {
+  content: "\e689";
+}
+
+.icon-duoxuan_xuanzhong:before {
+  content: "\e653";
+}
+
+.icon-toolbar-scale:before {
+  content: "\e636";
+}
+
+.icon-mesh-plane:before {
+  content: "\ea98";
+}
+
+.icon-deng1:before {
+  content: "\e611";
+}
+
+.icon-mesh-polygon:before {
+  content: "\e61b";
+}
+
+.icon-toolbar-move:before {
+  content: "\e617";
+}
+
+.icon-outliner-collection:before {
+  content: "\e62a";
+}
+
+.icon-toolbar-rotate:before {
+  content: "\e64c";
+}
+
+.icon-editor-properties:before {
+  content: "\e66e";
+}
+
+.icon-mesh-sphere:before {
+  content: "\e609";
+}
+
+.icon-toolbar-cursor:before {
+  content: "\e6a5";
+}
+
+.icon-shangchuanmoxing:before {
+  content: "\e643";
+}
+
+.icon-editor-viewport:before {
+  content: "\e69e";
+}
+
+.icon-taiyang:before {
+  content: "\e627";
+}
+
+.icon-bulb1:before {
+  content: "\e856";
+}
+
+.icon-mesh-cube:before {
+  content: "\e8b2";
+}
+
+.icon-camera:before {
+  content: "\e96a";
+}
+
+.icon-camera-full:before {
+  content: "\e96b";
+}
+
+.icon-header-overlay:before {
+  content: "\ea30";
+}
+
+.icon-header-xray:before {
+  content: "\ea31";
+}
+
+.icon-jiedianguanli:before {
+  content: "\e614";
+}
+

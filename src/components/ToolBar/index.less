@@ -1,11 +1,33 @@
 .nuwa-toolbar {
-  display: flex;
-  align-items: center;
-  padding: @toolbar-padding;
-  height: @toolbar-height;
-  background: @toolbar-background;
+  position: absolute;
+  left: 6px;
+  top: 80px;
 
-  &:hover {
-    background: @toolbar-background__hover;
+  .iconfont {
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 24px;
+
+    &:not(:last-child) {
+      border-bottom: 1px solid #3d3d3d;
+    }
+
+    &:hover {
+      background-color: #4772b3;
+    }
+  }
+}
+
+.nuwa-toolbar-group {
+  border: 1px solid #3d3d3d;
+  border-radius: 4px;
+  background-color: #282828;
+  overflow: hidden;
+
+  &:not(:last-child) {
+    margin-bottom: 6px;
   }
 }

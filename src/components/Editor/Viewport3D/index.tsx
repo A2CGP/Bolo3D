@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import ToolBar from '@/components/ToolBar';
+import Header from '@/components/Header';
 import A2Renderer from '@/classes/A2Renderer';
 import A2SceneBase from '@/classes/A2SceneBase';
 import A2Scene from '@/scenes/A2Scene';
@@ -8,6 +8,7 @@ import A2PerspectiveCamera from '@/cameras/A2PerspectiveCamera';
 import A2GlobalContext from '@/globals/A2GlobalContext';
 import { onInit } from './events';
 import './index.less';
+import ToolBar from '@/components/ToolBar';
 
 const Viewport3D = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -45,6 +46,7 @@ const Viewport3D = () => {
   return (
     <div className='nuwa-editor-viewport3d'>
       <div className='nuwa-editor-viewport3d--toolbar-wrap'>
+        <Header />
         <ToolBar />
       </div>
       <canvas ref={canvasRef} className='nuwa-editor-viewport3d--canvas'></canvas>

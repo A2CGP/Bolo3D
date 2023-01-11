@@ -1,13 +1,19 @@
-import { FC } from 'react';
-import cx from 'classnames';
 import './index.less';
 
-export interface ToolBarProps {
-  [name: string]: any;
-}
-
-const ToolBar: FC<ToolBarProps> = ({ className, ...props }) => {
-  return <div className={cx('nuwa-toolbar', className)} {...props}></div>;
+const ToolBar = () => {
+  return (
+    <div className='nuwa-toolbar'>
+      <div className='nuwa-toolbar-group'>
+        <div className='iconfont icon-toolbar-select'></div>
+        <div className='iconfont icon-toolbar-cursor'></div>
+      </div>
+      <div className='nuwa-toolbar-group'>
+        <div className='iconfont icon-toolbar-move'></div>
+        <div className='iconfont icon-toolbar-rotate'></div>
+        <div className='iconfont icon-toolbar-scale'></div>
+      </div>
+    </div>
+  );
 };
 
 export default ToolBar;
