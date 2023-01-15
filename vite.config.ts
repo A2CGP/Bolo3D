@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  base: '/web-nuwa/',
+  base: '/bolo3d/',
   build: {
     outDir: resolve(__dirname, 'docs'),
   },
@@ -17,7 +17,7 @@ export default defineConfig({
     preprocessorOptions: {
       less: {
         charset: false,
-        additionalData: '@import "./src/global.less";',
+        additionalData: '@import "./src/gui/global.less";',
       },
     },
   },
