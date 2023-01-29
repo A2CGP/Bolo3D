@@ -1,4 +1,4 @@
-export enum A2PrimitiveMode {
+export enum PrimitiveMode {
   POINTS,
   LINES,
   TRIANGLES,

@@ -1,4 +1,4 @@
-import { Row } from '../../../base/Flex';
+import { Row } from '@/components/Flex';
 import Editor, { EditorType } from '../../Editor';
 import './index.less';
 

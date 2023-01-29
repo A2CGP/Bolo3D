@@ -1,14 +1,11 @@
-import { Matrix4 } from '../numerics/Matrix';
-import { Vector3 } from '../numerics/Vector';
-import { A2ObjectType } from '../classes/A2Object';
-import A2DrawableObject from '../classes/A2DrawableObject';
+import { Matrix4 } from '@/math/Matrix';
+import { Vector3 } from '@/math/Vector';
+import { ObjectType } from '../classes/Object3D';
+import DrawableObject from '../classes/DrawableObject';
+import type { ICamera, CameraType } from '@/core/types';
 
-export enum A2CameraType {
-  Perspective,
-}
-
-abstract class A2Camera extends A2DrawableObject {
-  cameraType: A2CameraType;
+abstract class Camera extends DrawableObject implements ICamera {
+  cameraType: CameraType;
 
   position = new Vector3(10.0, 6.0, 6.0);
   target = Vector3.zero();
@@ -20,8 +17,8 @@ abstract class A2Camera extends A2DrawableObject {
   projectionMatrix = Matrix4.identity();
   viewProjectionMatrixInverse = Matrix4.identity();
 
-  constructor(type: A2CameraType) {
-    super(A2ObjectType.Camera);
+  constructor(type: CameraType) {
+    super(ObjectType.Camera);
     this.cameraType = type;
     this.viewMatrix.lookAt(this.position, this.target, this.up);
   }
@@ -56,4 +53,4 @@ abstract class A2Camera extends A2DrawableObject {
   }
 }
 
-export default A2Camera;
+export default Camera;

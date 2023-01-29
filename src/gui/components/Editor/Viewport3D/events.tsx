@@ -1,6 +1,6 @@
 import * as ReactDOM from 'react-dom';
-import A2GlobalContext from '@/bolo3d/globals/A2GlobalContext';
-import ContextMenu from '../../../base/ContextMenu';
+import A2GlobalContext from '@/core/GlobalContext';
+import ContextMenu from '@/components/ContextMenu';
 
 export const onInit = () => {
   const viewport = A2GlobalContext.current.viewport;

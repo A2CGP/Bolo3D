@@ -1,11 +1,11 @@
-import A2Geometry, { A2GeometryType } from '../classes/A2Geometry';
-import A2Mesh from '../classes/A2Mesh';
-import { A2PrimitiveMode } from '../classes/A2Primitive';
-import { Color3 } from '../numerics/Color';
+import Geometry, { GeometryType } from '../classes/Geometry';
+import Mesh from '../classes/Mesh';
+import { PrimitiveMode } from '../classes/Primitive';
+import { Color3 } from '../../math/Color';
 
-class A2FloorGeometry extends A2Geometry {
+class FloorGeometry extends Geometry {
   constructor(size = 100.0, gutter = 1.0) {
-    super(A2GeometryType.Plane);
+    super(GeometryType.Plane);
 
     const half = Math.round(size / 2.0);
     const indices = [];
@@ -25,13 +25,13 @@ class A2FloorGeometry extends A2Geometry {
   }
 }
 
-class A2Floor extends A2Mesh {
-  primitiveMode = A2PrimitiveMode.LINES;
+class Floor extends Mesh {
+  primitiveMode = PrimitiveMode.LINES;
   color = new Color3(0.32, 0.32, 0.32);
 
   constructor(size = 100.0, gutter = 1.0) {
-    super(new A2FloorGeometry(size, gutter));
+    super(new FloorGeometry(size, gutter));
   }
 }
 
-export default A2Floor;
+export default Floor;

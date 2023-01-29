@@ -1,10 +1,10 @@
-import { A2ShadeMode } from '../../classes/A2DrawableObject';
-import A2Geometry, { A2GeometryType } from '../../classes/A2Geometry';
-import A2Mesh from '../../classes/A2Mesh';
+import { ShadeMode } from '../../classes/DrawableObject';
+import Geometry, { GeometryType } from '../../classes/Geometry';
+import Mesh from '../../classes/Mesh';
 
-class A2TorusGeometry extends A2Geometry {
+class TorusGeometry extends Geometry {
   constructor(radius = 1.0, maxU = 32, maxV = 16) {
-    super(A2GeometryType.Torus);
+    super(GeometryType.Torus);
     const inner = radius * 0.75;
     const outer = radius * 0.25;
     const indices: number[] = [];
@@ -55,13 +55,13 @@ class A2TorusGeometry extends A2Geometry {
   }
 }
 
-class A2MeshTorus extends A2Mesh {
-  shadeMode = A2ShadeMode.Smooth;
+class MeshTorus extends Mesh {
+  shadeMode = ShadeMode.Smooth;
 
   constructor(radius?: number) {
-    super(new A2TorusGeometry(radius));
+    super(new TorusGeometry(radius));
     this.displayName = `Torus${this.objectId}`;
   }
 }
 
-export default A2MeshTorus;
+export default MeshTorus;

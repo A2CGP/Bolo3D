@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import A2GlobalContext from '@/bolo3d/globals/A2GlobalContext';
+import GlobalContext from '@/core/GlobalContext';
 import './index.less';
 
 export interface MenuItem {
@@ -16,7 +16,7 @@ export interface MenuProps {
 
 const Menu: FC<MenuProps> = ({ items, title, onItemClick }) => {
   const onClick = (key: MenuItem['key']) => {
-    const scene = A2GlobalContext.current.viewport?.scene;
+    const scene = GlobalContext.current.viewport?.scene;
 
     if (scene) {
       scene.emit('menu-add', key);

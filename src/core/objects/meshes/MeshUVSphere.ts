@@ -1,10 +1,10 @@
-import { A2ShadeMode } from '../../classes/A2DrawableObject';
-import A2Geometry, { A2GeometryType } from '../../classes/A2Geometry';
-import A2Mesh from '../../classes/A2Mesh';
+import { ShadeMode } from '../../classes/DrawableObject';
+import Geometry, { GeometryType } from '../../classes/Geometry';
+import Mesh from '../../classes/Mesh';
 
-class A2UVSphereGeometry extends A2Geometry {
+class UVSphereGeometry extends Geometry {
   constructor(radius = 1.0, maxU = 16, maxV = 16) {
-    super(A2GeometryType.UVSphere);
+    super(GeometryType.UVSphere);
     const indices: number[] = [];
     const vertices: number[] = [];
     const normals: number[] = [];
@@ -46,13 +46,13 @@ class A2UVSphereGeometry extends A2Geometry {
   }
 }
 
-class A2MeshUVSphere extends A2Mesh {
-  shadeMode = A2ShadeMode.Smooth;
+class MeshUVSphere extends Mesh {
+  shadeMode = ShadeMode.Smooth;
 
   constructor(radius?: number) {
-    super(new A2UVSphereGeometry(radius));
+    super(new UVSphereGeometry(radius));
     this.displayName = `Sphere${this.objectId}`;
   }
 }
 
-export default A2MeshUVSphere;
+export default MeshUVSphere;

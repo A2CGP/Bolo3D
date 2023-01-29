@@ -1,4 +1,4 @@
-export enum A2GeometryType {
+export enum GeometryType {
   Polygon,
   Plane,
   Cube,
@@ -8,9 +8,9 @@ export enum A2GeometryType {
 
 let geometryId = 1;
 
-abstract class A2Geometry {
+abstract class Geometry {
   readonly geometryId = geometryId++;
-  readonly geometryType: A2GeometryType;
+  readonly geometryType: GeometryType;
 
   smoothLineIndices: Uint32Array | null = null;
   smoothLineIndicesCount = 0;
@@ -30,7 +30,7 @@ abstract class A2Geometry {
   flatNormals: Float32Array | null = null;
   flatUVs: Float32Array | null = null;
 
-  constructor(type: A2GeometryType) {
+  constructor(type: GeometryType) {
     this.geometryType = type;
   }
 
@@ -81,4 +81,4 @@ abstract class A2Geometry {
   }
 }
 
-export default A2Geometry;
+export default Geometry;

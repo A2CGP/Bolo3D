@@ -1,4 +1,4 @@
-import { Column } from './base/Flex';
+import { Column } from '@/components/Flex';
 import TopBar from './components/TopBar';
 import Workspace from './components/Workspace';
 import StatusBar from './components/StatusBar';

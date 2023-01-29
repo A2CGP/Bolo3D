@@ -1,30 +1,30 @@
 import { useEffect, useState } from 'react';
 import cx from 'classnames';
-import { A2ObjectType } from '@/bolo3d/classes/A2Object';
-import A2DrawableObject from '@/bolo3d/classes/A2DrawableObject';
-import A2Mesh from '@/bolo3d/classes/A2Mesh';
-import { A2GeometryType } from '@/bolo3d/classes/A2Geometry';
-import A2GlobalContext from '@/bolo3d/globals/A2GlobalContext';
-import A2Scene from '@/bolo3d/scenes/A2Scene';
+import { ObjectType } from '@/core/classes/Object3D';
+import DrawableObject from '@/core/classes/DrawableObject';
+import Mesh from '@/core/classes/Mesh';
+import { GeometryType } from '@/core/classes/Geometry';
+import GlobalContext from '@/core/GlobalContext';
+import Scene from '@/core/scenes/Scene';
 import './index.less';
 
-const getClassName = (object: A2DrawableObject) => {
-  if (object.objectType === A2ObjectType.Camera) {
+const getClassName = (object: DrawableObject) => {
+  if (object.objectType === ObjectType.Camera) {
     return 'icon-camera-full';
   }
 
-  const mesh = object as A2Mesh;
+  const mesh = object as Mesh;
 
   switch (mesh.geometry.geometryType) {
-    case A2GeometryType.Polygon:
+    case GeometryType.Polygon:
       return 'icon-mesh-polygon';
-    case A2GeometryType.Plane:
+    case GeometryType.Plane:
       return 'icon-mesh-plane';
-    case A2GeometryType.Cube:
+    case GeometryType.Cube:
       return 'icon-mesh-cube';
-    case A2GeometryType.UVSphere:
+    case GeometryType.UVSphere:
       return 'icon-mesh-sphere';
-    case A2GeometryType.Torus:
+    case GeometryType.Torus:
       return 'icon-mesh-torus';
     default:
       return '';
@@ -32,21 +32,21 @@ const getClassName = (object: A2DrawableObject) => {
 };
 
 const Outliner = () => {
-  const [objects, setObjects] = useState<A2DrawableObject[]>([]);
+  const [objects, setObjects] = useState<DrawableObject[]>([]);
 
   useEffect(() => {
-    const scene = A2GlobalContext.current.viewport?.scene;
+    const scene = GlobalContext.current.viewport?.scene;
 
     if (scene) {
-      let initialObjects = (scene as A2Scene).objectMaps.values();
+      let initialObjects = (scene as Scene).objectMaps.values();
 
       setObjects([...initialObjects]);
       scene.on('add', () => {
-        initialObjects = (scene as A2Scene).objectMaps.values();
+        initialObjects = (scene as Scene).objectMaps.values();
         setObjects([...initialObjects]);
       });
       scene.on('delete', () => {
-        initialObjects = (scene as A2Scene).objectMaps.values();
+        initialObjects = (scene as Scene).objectMaps.values();
         setObjects([...initialObjects]);
       });
     }

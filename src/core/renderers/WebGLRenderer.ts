@@ -1,10 +1,10 @@
-import A2Camera from '../cameras/A2Camera';
-import A2DrawableObject, { A2ShadeMode } from '../classes/A2DrawableObject';
-import A2Mesh from '../classes/A2Mesh';
-import { A2ObjectType } from '../classes/A2Object';
-import { A2PrimitiveMode } from '../classes/A2Primitive';
-import A2Floor from '../objects/A2Floor';
-import A2Scene from '../scenes/A2Scene';
+import A2Camera from '../cameras/Camera';
+import A2DrawableObject, { ShadeMode } from '../classes/DrawableObject';
+import A2Mesh from '../classes/Mesh';
+import { ObjectType } from '../classes/Object3D';
+import { PrimitiveMode } from '../classes/Primitive';
+import A2Floor from '../objects/Floor';
+import A2Scene from '../scenes/Scene';
 import BlinnPhong from '../shaders/BlinnPhong';
 import ColorOnly from '../shaders/ColorOnly';
 import Outline from '../shaders/Outline';
@@ -183,7 +183,7 @@ class WebGLRenderer {
     gl.clearColor(r, g, b, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     scene.objectMaps.forEach(object => {
-      if (object.objectType === A2ObjectType.Mesh) {
+      if (object.objectType === ObjectType.Mesh) {
         this.renderMesh(object as A2Mesh, camera, scene);
       }
     });
@@ -198,14 +198,14 @@ class WebGLRenderer {
     gl.uniformMatrix4fv(state.locations['uProjectionMatrix'], false, camera.projectionMatrix.elements);
     gl.uniformMatrix4fv(state.locations['uViewMatrix'], false, camera.viewMatrix.elements);
     scene.objectMaps.forEach(object => {
-      if (object.objectType === A2ObjectType.Mesh && !(object instanceof A2Floor)) {
+      if (object.objectType === ObjectType.Mesh && !(object instanceof A2Floor)) {
         const mesh = object as A2Mesh;
         const id = mesh.objectId;
 
         gl.uniform4f(state.locations['uColor'], (id & 0xff) / 0xff, ((id >> 8) & 0xff) / 0xff, ((id >> 16) & 0xff) / 0xff, ((id >> 24) & 0xff) / 0xff);
         gl.uniformMatrix4fv(state.locations['uModelMatrix'], false, mesh.modelMatrix.elements);
-        if (mesh.primitiveMode === A2PrimitiveMode.LINES) {
-          if (mesh.shadeMode === A2ShadeMode.Smooth) {
+        if (mesh.primitiveMode === PrimitiveMode.LINES) {
+          if (mesh.shadeMode === ShadeMode.Smooth) {
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, state.VBOs.get('index') || null);
             gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.geometry.smoothLineIndices, gl.STATIC_DRAW);
             gl.bindBuffer(gl.ARRAY_BUFFER, state.VBOs.get('position') || null);
@@ -219,7 +219,7 @@ class WebGLRenderer {
             gl.drawElements(gl.LINES, mesh.geometry.flatLineIndicesCount, gl.UNSIGNED_INT, 0);
           }
         } else {
-          if (mesh.shadeMode === A2ShadeMode.Smooth) {
+          if (mesh.shadeMode === ShadeMode.Smooth) {
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, state.VBOs.get('index') || null);
             gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.geometry.smoothIndices, gl.STATIC_DRAW);
             gl.bindBuffer(gl.ARRAY_BUFFER, state.VBOs.get('position') || null);
@@ -242,14 +242,14 @@ class WebGLRenderer {
     let state = this.states.get(mesh.objectId);
 
     if (!state) {
-      if (mesh.primitiveMode === A2PrimitiveMode.LINES) {
+      if (mesh.primitiveMode === PrimitiveMode.LINES) {
         state = new State(gl, this.createProgram(ColorOnly.vertex, ColorOnly.fragment));
         gl.bindVertexArray(state.VAO);
       } else {
         state = new State(gl, this.createProgram(BlinnPhong.vertex, BlinnPhong.fragment), true);
         gl.bindVertexArray(state.VAO);
         gl.bindBuffer(gl.ARRAY_BUFFER, state.VBOs.get('normal') || null);
-        if (mesh.shadeMode === A2ShadeMode.Smooth) {
+        if (mesh.shadeMode === ShadeMode.Smooth) {
           gl.bufferData(gl.ARRAY_BUFFER, mesh.geometry.smoothNormals, gl.STATIC_DRAW);
         } else {
           gl.bufferData(gl.ARRAY_BUFFER, mesh.geometry.flatNormals, gl.STATIC_DRAW);
@@ -257,21 +257,21 @@ class WebGLRenderer {
       }
       this.states.set(mesh.objectId, state);
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, state.VBOs.get('index') || null);
-      if (mesh.shadeMode === A2ShadeMode.Smooth) {
-        if (mesh.primitiveMode === A2PrimitiveMode.LINES) {
+      if (mesh.shadeMode === ShadeMode.Smooth) {
+        if (mesh.primitiveMode === PrimitiveMode.LINES) {
           gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.geometry.smoothLineIndices, gl.STATIC_DRAW);
         } else {
           gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.geometry.smoothIndices, gl.STATIC_DRAW);
         }
       } else {
-        if (mesh.primitiveMode === A2PrimitiveMode.LINES) {
+        if (mesh.primitiveMode === PrimitiveMode.LINES) {
           gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.geometry.flatLineIndices, gl.STATIC_DRAW);
         } else {
           gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.geometry.flatIndices, gl.STATIC_DRAW);
         }
       }
       gl.bindBuffer(gl.ARRAY_BUFFER, state.VBOs.get('position') || null);
-      if (mesh.shadeMode === A2ShadeMode.Smooth) {
+      if (mesh.shadeMode === ShadeMode.Smooth) {
         gl.bufferData(gl.ARRAY_BUFFER, mesh.geometry.smoothVertices, gl.STATIC_DRAW);
       } else {
         gl.bufferData(gl.ARRAY_BUFFER, mesh.geometry.flatVertices, gl.STATIC_DRAW);
@@ -286,7 +286,7 @@ class WebGLRenderer {
       gl.bindVertexArray(ostate.VAO);
       gl.enable(gl.CULL_FACE);
       gl.cullFace(gl.FRONT);
-      if (mesh.shadeMode === A2ShadeMode.Smooth) {
+      if (mesh.shadeMode === ShadeMode.Smooth) {
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ostate.VBOs.get('index') || null);
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.geometry.smoothIndices, gl.STATIC_DRAW);
         gl.bindBuffer(gl.ARRAY_BUFFER, ostate.VBOs.get('position') || null);
@@ -307,15 +307,15 @@ class WebGLRenderer {
     gl.uniformMatrix4fv(state.locations['uModelMatrix'], false, mesh.modelMatrix.elements);
     gl.uniform3fv(state.locations['uColor'], mesh.color.elements);
     gl.bindVertexArray(state.VAO);
-    if (mesh.primitiveMode === A2PrimitiveMode.LINES) {
-      if (mesh.shadeMode === A2ShadeMode.Smooth) {
+    if (mesh.primitiveMode === PrimitiveMode.LINES) {
+      if (mesh.shadeMode === ShadeMode.Smooth) {
         gl.drawElements(gl.LINES, mesh.geometry.smoothLineIndicesCount, gl.UNSIGNED_INT, 0);
       } else {
         gl.drawElements(gl.LINES, mesh.geometry.flatLineIndicesCount, gl.UNSIGNED_INT, 0);
       }
     } else {
       gl.uniform3f(state.locations['uEye'], camera.position.x, camera.position.y, camera.position.z);
-      if (mesh.shadeMode === A2ShadeMode.Smooth) {
+      if (mesh.shadeMode === ShadeMode.Smooth) {
         gl.drawElements(gl.TRIANGLES, mesh.geometry.smoothIndicesCount, gl.UNSIGNED_INT, 0);
       } else {
         gl.drawElements(gl.TRIANGLES, mesh.geometry.flatIndicesCount, gl.UNSIGNED_INT, 0);

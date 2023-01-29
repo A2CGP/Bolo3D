@@ -1,5 +1,5 @@
-import A2Camera from '../cameras/A2Camera';
-import A2SceneBase from './A2SceneBase';
+import Camera from '../cameras/Camera';
+import SceneBase from './SceneBase';
 
 abstract class A2Renderer {
   readonly canvas: HTMLCanvasElement;
@@ -8,7 +8,7 @@ abstract class A2Renderer {
     this.canvas = canvas;
   }
 
-  abstract render(scene: A2SceneBase, camera: A2Camera): void;
+  abstract render(scene: SceneBase, camera: Camera): void;
 }
 
 export default A2Renderer;
