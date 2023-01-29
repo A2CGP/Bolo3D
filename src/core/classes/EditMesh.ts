@@ -1,5 +1,5 @@
-import DrawableObject from './DrawableObject';
+import { SceneMesh } from './SceneObject';
 
-class EditMesh extends DrawableObject {}
+class EditMesh extends SceneMesh {}
 
 export default EditMesh;

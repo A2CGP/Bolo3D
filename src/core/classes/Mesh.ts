@@ -1,11 +1,11 @@
 import { Color3 } from '../../math/Color';
 import { Matrix4 } from '@/math/Matrix';
 import { Vector3 } from '@/math/Vector';
-import A2DrawableObject from './DrawableObject';
-import A2EditMesh from './EditMesh';
-import A2Geometry from './Geometry';
+import { SceneMesh } from './SceneObject';
+import EditMesh from './EditMesh';
+import Geometry from './Geometry';
 
-class A2Mesh extends A2DrawableObject {
+class Mesh extends SceneMesh {
   position = Vector3.zero();
   scale = Vector3.one();
 
@@ -13,14 +13,14 @@ class A2Mesh extends A2DrawableObject {
 
   color = new Color3(0.8, 0.8, 0.8);
 
-  geometry: A2Geometry;
-  editMesh: A2EditMesh | null = null;
+  geometry: Geometry;
+  editMesh: EditMesh | null = null;
 
-  constructor(geometry: A2Geometry) {
+  constructor(geometry: Geometry) {
     super();
     this.geometry = geometry;
     this.displayName = `Mesh${this.objectId}`;
   }
 }
 
-export default A2Mesh;
+export default Mesh;

@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import cx from 'classnames';
 import { ObjectType } from '@/core/classes/Object3D';
-import DrawableObject from '@/core/classes/DrawableObject';
+import DrawableObject from '@/core/classes/SceneObject';
 import Mesh from '@/core/classes/Mesh';
 import { GeometryType } from '@/core/classes/Geometry';
 import GlobalContext from '@/core/GlobalContext';
-import Scene from '@/core/scenes/Scene';
+import Scene from '@/core/classes/Scene';
 import './index.less';
 
 const getClassName = (object: DrawableObject) => {

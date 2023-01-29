@@ -1,5 +1,4 @@
-import { CameraType } from '@/core/types';
-import Camera from './Camera';
+import Camera, { CameraType } from './Camera';
 
 class PerspectiveCamera extends Camera {
   fovy: number;

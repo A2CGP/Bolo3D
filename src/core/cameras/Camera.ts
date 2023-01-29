@@ -1,10 +1,14 @@
 import { Matrix4 } from '@/math/Matrix';
 import { Vector3 } from '@/math/Vector';
 import { ObjectType } from '../classes/Object3D';
-import DrawableObject from '../classes/DrawableObject';
-import type { ICamera, CameraType } from '@/core/types';
+import DrawableObject from '../classes/SceneObject';
 
-abstract class Camera extends DrawableObject implements ICamera {
+export enum CameraType {
+  Perspective,
+  Orthographic,
+}
+
+abstract class Camera extends DrawableObject {
   cameraType: CameraType;
 
   position = new Vector3(10.0, 6.0, 6.0);

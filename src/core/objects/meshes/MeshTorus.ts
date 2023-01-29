@@ -1,4 +1,4 @@
-import { ShadeMode } from '../../classes/DrawableObject';
+import { ShadeMode } from '../../classes/SceneObject';
 import Geometry, { GeometryType } from '../../classes/Geometry';
 import Mesh from '../../classes/Mesh';
 

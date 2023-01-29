@@ -1,10 +1,10 @@
-import A2Camera from '../cameras/Camera';
-import A2DrawableObject, { ShadeMode } from '../classes/DrawableObject';
-import A2Mesh from '../classes/Mesh';
+import Camera from '../cameras/Camera';
+import SceneObject, { ShadeMode } from '../classes/SceneObject';
+import Mesh from '../classes/Mesh';
 import { ObjectType } from '../classes/Object3D';
 import { PrimitiveMode } from '../classes/Primitive';
-import A2Floor from '../objects/Floor';
-import A2Scene from '../scenes/Scene';
+import Floor from '../objects/Floor';
+import Scene from '../classes/Scene';
 import BlinnPhong from '../shaders/BlinnPhong';
 import ColorOnly from '../shaders/ColorOnly';
 import Outline from '../shaders/Outline';
@@ -151,9 +151,9 @@ class WebGLRenderer {
     return program;
   }
 
-  selectedObjects: Set<A2DrawableObject> = new Set();
+  selectedObjects: Set<SceneObject> = new Set();
 
-  render(scene: A2Scene, camera: A2Camera) {
+  render(scene: Scene, camera: Camera) {
     const gl = this.context;
     const { r, g, b } = scene.clearColor;
 
@@ -184,12 +184,12 @@ class WebGLRenderer {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     scene.objectMaps.forEach(object => {
       if (object.objectType === ObjectType.Mesh) {
-        this.renderMesh(object as A2Mesh, camera, scene);
+        this.renderMesh(object as Mesh, camera, scene);
       }
     });
   }
 
-  renderPicking(scene: A2Scene, camera: A2Camera) {
+  renderPicking(scene: Scene, camera: Camera) {
     const gl = this.context;
     const state = this.states.get(0)!;
 
@@ -198,8 +198,8 @@ class WebGLRenderer {
     gl.uniformMatrix4fv(state.locations['uProjectionMatrix'], false, camera.projectionMatrix.elements);
     gl.uniformMatrix4fv(state.locations['uViewMatrix'], false, camera.viewMatrix.elements);
     scene.objectMaps.forEach(object => {
-      if (object.objectType === ObjectType.Mesh && !(object instanceof A2Floor)) {
-        const mesh = object as A2Mesh;
+      if (object.objectType === ObjectType.Mesh && !(object instanceof Floor)) {
+        const mesh = object as Mesh;
         const id = mesh.objectId;
 
         gl.uniform4f(state.locations['uColor'], (id & 0xff) / 0xff, ((id >> 8) & 0xff) / 0xff, ((id >> 16) & 0xff) / 0xff, ((id >> 24) & 0xff) / 0xff);
@@ -237,7 +237,7 @@ class WebGLRenderer {
     });
   }
 
-  renderMesh(mesh: A2Mesh, camera: A2Camera, scene: A2Scene) {
+  renderMesh(mesh: Mesh, camera: Camera, scene: Scene) {
     const gl = this.context;
     let state = this.states.get(mesh.objectId);
 

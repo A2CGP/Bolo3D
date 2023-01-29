@@ -6,7 +6,7 @@ export enum ShadeMode {
   Smooth,
 }
 
-class A2DrawableObject extends Object3D {
+class SceneObject extends Object3D {
   displayName: string;
   primitiveMode = PrimitiveMode.TRIANGLES;
   shadeMode = ShadeMode.Flat;
@@ -18,4 +18,6 @@ class A2DrawableObject extends Object3D {
   }
 }
 
-export default A2DrawableObject;
+export class SceneMesh extends SceneObject {}
+
+export default SceneObject;
