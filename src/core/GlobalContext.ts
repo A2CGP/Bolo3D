@@ -1,8 +1,8 @@
-import SceneBase from './classes/SceneBase';
+import type Scene from './classes/Scene';
 import WebGLRenderer from './renderers/WebGLRenderer';
 
 export interface IGlobalViewportEditorContext {
-  scene: SceneBase;
+  scene: Scene;
 }
 
 export interface IGlobalContext {

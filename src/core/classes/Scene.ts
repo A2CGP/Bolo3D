@@ -1,21 +1,18 @@
-import Camera from '../cameras/Camera';
+import EventEmitter from 'events';
 import SceneObject from './SceneObject';
 import Mesh from './Mesh';
-import Renderer from './Renderer';
-import SceneBase from './SceneBase';
 import { Color3 } from '../../math/Color';
 import Floor from '../objects/Floor';
 import MeshCube from '../objects/meshes/MeshCube';
 import MeshTorus from '../objects/meshes/MeshTorus';
 import MeshUVSphere from '../objects/meshes/MeshUVSphere';
 
-class Scene extends SceneBase {
-  clearColor = new Color3(0.24, 0.24, 0.24);
-  objectMaps = new Map<number, SceneObject>();
+class Scene extends EventEmitter {
+  public clearColor = new Color3(0.24, 0.24, 0.24);
+  public objectMaps = new Map<number, SceneObject>();
 
-  constructor(renderer: Renderer, camera: Camera) {
-    super(renderer, camera);
-
+  constructor() {
+    super();
     this.add(new Floor());
     this.add(new MeshCube());
     this.on('menu-add', (key: string) => {
@@ -47,10 +44,6 @@ class Scene extends SceneBase {
   delete(object: SceneObject) {
     this.objectMaps.delete(object.objectId);
     this.emit('delete', object);
-  }
-
-  render() {
-    this.renderer.render(this, this.camera);
   }
 }
 

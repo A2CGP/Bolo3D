@@ -1,15 +1,10 @@
 import * as ReactDOM from 'react-dom';
-import A2GlobalContext from '@/core/GlobalContext';
 import ContextMenu from '@/components/ContextMenu';
+import type Scene from '@/core/classes/Scene';
+import type Camera from '@/core/cameras/Camera';
 
-export const onInit = () => {
-  const viewport = A2GlobalContext.current.viewport;
-
-  if (!viewport) return;
-
+export const onInit = (canvas: HTMLCanvasElement, scene: Scene, camera: Camera) => {
   const container = document.getElementById('editor-contextmenu') as HTMLElement;
-  const scene = viewport.scene;
-  const canvas = scene.renderer.canvas;
   let isMouseDown = false;
   let lastX = 0;
   let lastY = 0;
@@ -46,8 +41,8 @@ export const onInit = () => {
 
     lastX = e.x;
     lastY = e.y;
-    scene.camera.rotateY(moveX * Math.PI / 180);
-    scene.camera.rotateX(moveY * Math.PI / 180);
+    camera.rotateY(moveX * Math.PI / 180);
+    camera.rotateX(moveY * Math.PI / 180);
   });
 
   canvas.addEventListener('mouseleave', (e) => {
@@ -59,9 +54,9 @@ export const onInit = () => {
     e.stopPropagation();
     // zoomIn
     if (e.deltaY < 0) {
-      scene.camera.scale(0.98);
+      camera.scale(0.98);
     } else { // zoomOut
-      scene.camera.scale(1.02);
+      camera.scale(1.02);
     }
   });
 };

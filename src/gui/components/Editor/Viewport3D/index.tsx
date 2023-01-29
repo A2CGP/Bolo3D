@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import Renderer from '@/core/classes/Renderer';
-import SceneBase from '@/core/classes/SceneBase';
 import Scene from '@/core/classes/Scene';
 import Camera from '@/core/cameras/Camera';
 import PerspectiveCamera from '@/core/cameras/PerspectiveCamera';
@@ -17,7 +16,7 @@ const Viewport3D = () => {
     if (canvasRef.current) {
       const current = GlobalContext.current.viewport;
       let renderer: Renderer;
-      let scene: SceneBase;
+      let scene: Scene;
       let camera: Camera;
 
       if (current) {
@@ -31,12 +30,12 @@ const Viewport3D = () => {
         canvas.height = height;
         renderer = GlobalContext.createRenderer(canvas);
         camera = new PerspectiveCamera(Math.PI * 0.4, width / height);
-        scene = new Scene(renderer, camera);
+        scene = new Scene();
         GlobalContext.current.viewport = { scene };
-        onInit();
+        onInit(canvas, scene, camera);
       }
       function render() {
-        scene.render();
+        renderer.render(scene, camera);
         requestAnimationFrame(render);
       }
       render();
