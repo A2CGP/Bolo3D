@@ -1,6 +1,6 @@
 import * as ReactDOM from 'react-dom';
 import ContextMenu from '@/components/ContextMenu';
-import type Scene from '@/core/classes/Scene';
+import type Scene from '@/core/scene/Scene';
 import type Camera from '@/core/cameras/Camera';
 
 export const onInit = (canvas: HTMLCanvasElement, scene: Scene, camera: Camera) => {

@@ -1,7 +1,5 @@
-import Geometry, { GeometryType } from '../classes/Geometry';
-import Mesh from '../classes/Mesh';
-import { PrimitiveMode } from '../classes/Primitive';
-import { Color3 } from '../../math/Color';
+import Geometry, { GeometryType } from '@/core/classes/Geometry';
+import Mesh from '@/core/classes/Mesh';
 
 class FloorGeometry extends Geometry {
   constructor(size = 100.0, gutter = 1.0) {
@@ -26,9 +24,6 @@ class FloorGeometry extends Geometry {
 }
 
 class Floor extends Mesh {
-  primitiveMode = PrimitiveMode.LINES;
-  color = new Color3(0.32, 0.32, 0.32);
-
   constructor(size = 100.0, gutter = 1.0) {
     super(new FloorGeometry(size, gutter));
   }

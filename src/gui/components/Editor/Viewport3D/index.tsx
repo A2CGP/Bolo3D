@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import Renderer from '@/core/classes/Renderer';
-import Scene from '@/core/classes/Scene';
+import Scene from '@/core/scene/Scene';
 import Camera from '@/core/cameras/Camera';
 import PerspectiveCamera from '@/core/cameras/PerspectiveCamera';
 import GlobalContext from '@/core/GlobalContext';

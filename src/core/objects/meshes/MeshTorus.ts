@@ -1,6 +1,5 @@
-import { ShadeMode } from '../../classes/SceneObject';
-import Geometry, { GeometryType } from '../../classes/Geometry';
-import Mesh from '../../classes/Mesh';
+import Geometry, { GeometryType } from '@/core/classes/Geometry';
+import Mesh from '@/core/classes/Mesh';
 
 class TorusGeometry extends Geometry {
   constructor(radius = 1.0, maxU = 32, maxV = 16) {
@@ -56,11 +55,8 @@ class TorusGeometry extends Geometry {
 }
 
 class MeshTorus extends Mesh {
-  shadeMode = ShadeMode.Smooth;
-
   constructor(radius?: number) {
     super(new TorusGeometry(radius));
-    this.displayName = `Torus${this.objectId}`;
   }
 }
 

@@ -1,7 +1,7 @@
 import { Matrix4 } from '@/math/Matrix';
 import { Vector3 } from '@/math/Vector';
 import { ObjectType } from '../classes/Object3D';
-import SceneObject from '../classes/SceneObject';
+import SceneObject from '../scene/SceneObject';
 
 export enum CameraType {
   Perspective,

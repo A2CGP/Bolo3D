@@ -1,7 +1,7 @@
-import A2Geometry, { GeometryType } from '../../classes/Geometry';
-import A2Mesh from '../../classes/Mesh';
+import Geometry, { GeometryType } from '@/core/classes/Geometry';
+import Mesh from '@/core/classes/Mesh';
 
-class CubeGeometry extends A2Geometry {
+class CubeGeometry extends Geometry {
   constructor() {
     super(GeometryType.Cube);
     this.setFlatIndices([
@@ -43,11 +43,10 @@ class CubeGeometry extends A2Geometry {
   }
 }
 
-class A2MeshCube extends A2Mesh {
+class MeshCube extends Mesh {
   constructor() {
     super(new CubeGeometry());
-    this.displayName = `Cube${this.objectId}`;
   }
 }
 
-export default A2MeshCube;
+export default MeshCube;

@@ -1,77 +1,19 @@
-import Camera from '../cameras/Camera';
-import SceneObject, { ShadeMode } from '../classes/SceneObject';
-import Mesh from '../classes/Mesh';
-import { ObjectType } from '../classes/Object3D';
-import { PrimitiveMode } from '../classes/Primitive';
-import Floor from '../objects/Floor';
-import Scene from '../classes/Scene';
-import BlinnPhong from '../shaders/BlinnPhong';
-import ColorOnly from '../shaders/ColorOnly';
-import Outline from '../shaders/Outline';
-import Picking from '../shaders/Picking';
+import Camera from '@/core/cameras/Camera';
+import Scene from '@/core/scene/Scene';
+import { PrimitiveMode } from '@/core/classes/Primitive';
+import Renderer from '@/core/classes/Renderer';
+import SceneObject, { SceneMesh, ShadeMode } from '@/core/scene/SceneObject';
+import { ObjectType } from '@/core/classes/Object3D';
+import RenderingState from './RenderingState';
+import BlinnPhong from '@/core/shaders/BlinnPhong';
+import ColorOnly from '@/core/shaders/ColorOnly';
+import Outline from '@/core/shaders/Outline';
+import Picking from '@/core/shaders/Picking';
+import Floor from '@/core/objects/Floor';
 
-class State {
-  program: WebGLProgram;
-  locations: Record<string, WebGLUniformLocation | null> = {};
-  VAO: WebGLVertexArrayObject;
-  VBOs = new Map<string, WebGLBuffer>();
-
-  constructor(gl: WebGL2RenderingContext, program: WebGLProgram, useNormal = false, useUV = false) {
-    const VAO = gl.createVertexArray();
-
-    if (!VAO) throw new Error('Create vertex array failed!');
-    this.program = program;
-    this.VAO = VAO;
-    gl.bindVertexArray(VAO);
-    this.createBuffer(gl, 'index', gl.ELEMENT_ARRAY_BUFFER);
-    this.createArrayBuffer(gl, 'position', gl.getAttribLocation(program, 'position'), 3);
-    if (useNormal) {
-      this.createArrayBuffer(gl, 'normal', gl.getAttribLocation(program, 'normal'), 3);
-      this.locations['uEye'] = gl.getUniformLocation(program, 'uEye');
-    }
-    if (useUV) this.createArrayBuffer(gl, 'uv', gl.getAttribLocation(program, 'uv'), 2);
-    gl.bindVertexArray(null);
-    this.locations['uProjectionMatrix'] = gl.getUniformLocation(program, 'uProjectionMatrix');
-    this.locations['uViewMatrix'] = gl.getUniformLocation(program, 'uViewMatrix');
-    this.locations['uModelMatrix'] = gl.getUniformLocation(program, 'uModelMatrix');
-    this.locations['uColor'] = gl.getUniformLocation(program, 'uColor');
-  }
-
-  createBuffer(gl: WebGL2RenderingContext, name: string, target: number) {
-    const buffer = gl.createBuffer();
-
-    if (!buffer) {
-      this.dispose(gl);
-      throw new Error(`Failed to create VBO '${name}'!`);
-    }
-    gl.bindBuffer(target, buffer);
-    this.VBOs.set(name, buffer);
-
-    return buffer;
-  }
-
-  createArrayBuffer(gl: WebGL2RenderingContext, name: string, index: number, size: number) {
-    const buffer = this.createBuffer(gl, name, gl.ARRAY_BUFFER);
-
-    gl.vertexAttribPointer(index, size, gl.FLOAT, false, size * 4, 0);
-    gl.enableVertexAttribArray(index);
-
-    return buffer;
-  }
-
-  dispose(gl: WebGL2RenderingContext) {
-    gl.deleteVertexArray(this.VAO);
-    for (const VBO in this.VBOs.values) {
-      gl.deleteBuffer(VBO);
-    }
-  }
-}
-
-class WebGLRenderer {
-  canvas: HTMLCanvasElement;
+class WebGLRenderer extends Renderer {
   context: WebGL2RenderingContext;
-  states = new Map<number, State>();
-  shaders = new Map();
+  stateMap: Map<number, RenderingState> = new Map();
   pickingFBO: WebGLFramebuffer;
   pickingColorTexture: WebGLTexture;
   depthTexture: WebGLTexture;
@@ -80,7 +22,8 @@ class WebGLRenderer {
   needsUpdatePicking = true;
   outlineProgram: WebGLProgram;
 
-  constructor(canvas: HTMLCanvasElement, options: WebGLContextAttributes = {}) {
+  constructor(canvas: HTMLCanvasElement, public options?: WebGLContextAttributes) {
+    super(canvas);
     const { width, height } = canvas;
     const gl = canvas.getContext('webgl2', {
       powerPreference: "high-performance",
@@ -92,9 +35,8 @@ class WebGLRenderer {
 
     if (!gl) throw new Error('Your current browser does not support WebGL2!');
     gl.viewport(0, 0, width, height);
-    this.canvas = canvas;
-    this.context = gl;
     gl.enable(gl.DEPTH_TEST);
+    this.context = gl;
     const fbo = gl.createFramebuffer();
     if (!fbo) throw 'Failed to create fbo!';
     this.pickingFBO = fbo;
@@ -114,9 +56,9 @@ class WebGLRenderer {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, texture, 0);
     this.pickingProgram = this.createProgram(Picking.vertex, Picking.fragment);
-    this.states.set(0, new State(gl, this.pickingProgram));
+    this.stateMap.set(0, new RenderingState(gl, this.pickingProgram));
     this.outlineProgram = this.createProgram(Outline.vertex, Outline.fragment);
-    this.states.set(-1, new State(gl, this.outlineProgram));
+    this.stateMap.set(-1, new RenderingState(gl, this.outlineProgram));
 
     canvas.addEventListener('click', (e) => {
       this.pickingPosition.x = e.offsetX / canvas.clientWidth * width;
@@ -156,7 +98,7 @@ class WebGLRenderer {
   render(scene: Scene, camera: Camera) {
     const gl = this.context;
     const { r, g, b } = scene.clearColor;
-
+    
     if (this.needsUpdatePicking) {
       gl.bindFramebuffer(gl.FRAMEBUFFER, this.pickingFBO);
       gl.clearColor(0, 0, 0, 0);
@@ -182,30 +124,30 @@ class WebGLRenderer {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.clearColor(r, g, b, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    scene.objectMaps.forEach(object => {
-      if (object.objectType === ObjectType.Mesh) {
-        this.renderMesh(object as Mesh, camera, scene);
+    scene.objectMaps.forEach((sceneObject: SceneObject) => {
+      if (sceneObject.objectType === ObjectType.Mesh) {
+        this.renderMesh(sceneObject as SceneMesh, scene, camera);
       }
     });
   }
 
   renderPicking(scene: Scene, camera: Camera) {
     const gl = this.context;
-    const state = this.states.get(0)!;
+    const state = this.stateMap.get(0)!;
 
     gl.useProgram(this.pickingProgram);
     gl.bindVertexArray(state.VAO);
     gl.uniformMatrix4fv(state.locations['uProjectionMatrix'], false, camera.projectionMatrix.elements);
     gl.uniformMatrix4fv(state.locations['uViewMatrix'], false, camera.viewMatrix.elements);
     scene.objectMaps.forEach(object => {
-      if (object.objectType === ObjectType.Mesh && !(object instanceof Floor)) {
-        const mesh = object as Mesh;
-        const id = mesh.objectId;
+      if (object.objectType === ObjectType.Mesh && !((object as SceneMesh).item instanceof Floor)) {
+        const mesh = (object as SceneMesh).item;
+        const id = object.objectId;
 
         gl.uniform4f(state.locations['uColor'], (id & 0xff) / 0xff, ((id >> 8) & 0xff) / 0xff, ((id >> 16) & 0xff) / 0xff, ((id >> 24) & 0xff) / 0xff);
         gl.uniformMatrix4fv(state.locations['uModelMatrix'], false, mesh.modelMatrix.elements);
-        if (mesh.primitiveMode === PrimitiveMode.LINES) {
-          if (mesh.shadeMode === ShadeMode.Smooth) {
+        if (object.primitiveMode === PrimitiveMode.LINES) {
+          if (object.shadeMode === ShadeMode.Smooth) {
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, state.VBOs.get('index') || null);
             gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.geometry.smoothLineIndices, gl.STATIC_DRAW);
             gl.bindBuffer(gl.ARRAY_BUFFER, state.VBOs.get('position') || null);
@@ -219,7 +161,7 @@ class WebGLRenderer {
             gl.drawElements(gl.LINES, mesh.geometry.flatLineIndicesCount, gl.UNSIGNED_INT, 0);
           }
         } else {
-          if (mesh.shadeMode === ShadeMode.Smooth) {
+          if (object.shadeMode === ShadeMode.Smooth) {
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, state.VBOs.get('index') || null);
             gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.geometry.smoothIndices, gl.STATIC_DRAW);
             gl.bindBuffer(gl.ARRAY_BUFFER, state.VBOs.get('position') || null);
@@ -237,48 +179,49 @@ class WebGLRenderer {
     });
   }
 
-  renderMesh(mesh: Mesh, camera: Camera, scene: Scene) {
+  private renderMesh(sceneMesh: SceneMesh, scene: Scene, camera: Camera) {
     const gl = this.context;
-    let state = this.states.get(mesh.objectId);
+    const mesh = sceneMesh.item;
+    let state = this.stateMap.get(sceneMesh.objectId);
 
     if (!state) {
-      if (mesh.primitiveMode === PrimitiveMode.LINES) {
-        state = new State(gl, this.createProgram(ColorOnly.vertex, ColorOnly.fragment));
+      if (sceneMesh.primitiveMode === PrimitiveMode.LINES) {
+        state = new RenderingState(gl, this.createProgram(ColorOnly.vertex, ColorOnly.fragment));
         gl.bindVertexArray(state.VAO);
       } else {
-        state = new State(gl, this.createProgram(BlinnPhong.vertex, BlinnPhong.fragment), true);
+        state = new RenderingState(gl, this.createProgram(BlinnPhong.vertex, BlinnPhong.fragment), true);
         gl.bindVertexArray(state.VAO);
         gl.bindBuffer(gl.ARRAY_BUFFER, state.VBOs.get('normal') || null);
-        if (mesh.shadeMode === ShadeMode.Smooth) {
+        if (sceneMesh.shadeMode === ShadeMode.Smooth) {
           gl.bufferData(gl.ARRAY_BUFFER, mesh.geometry.smoothNormals, gl.STATIC_DRAW);
         } else {
           gl.bufferData(gl.ARRAY_BUFFER, mesh.geometry.flatNormals, gl.STATIC_DRAW);
         }
       }
-      this.states.set(mesh.objectId, state);
+      this.stateMap.set(sceneMesh.objectId, state);
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, state.VBOs.get('index') || null);
-      if (mesh.shadeMode === ShadeMode.Smooth) {
-        if (mesh.primitiveMode === PrimitiveMode.LINES) {
+      if (sceneMesh.shadeMode === ShadeMode.Smooth) {
+        if (sceneMesh.primitiveMode === PrimitiveMode.LINES) {
           gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.geometry.smoothLineIndices, gl.STATIC_DRAW);
         } else {
           gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.geometry.smoothIndices, gl.STATIC_DRAW);
         }
       } else {
-        if (mesh.primitiveMode === PrimitiveMode.LINES) {
+        if (sceneMesh.primitiveMode === PrimitiveMode.LINES) {
           gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.geometry.flatLineIndices, gl.STATIC_DRAW);
         } else {
           gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.geometry.flatIndices, gl.STATIC_DRAW);
         }
       }
       gl.bindBuffer(gl.ARRAY_BUFFER, state.VBOs.get('position') || null);
-      if (mesh.shadeMode === ShadeMode.Smooth) {
+      if (sceneMesh.shadeMode === ShadeMode.Smooth) {
         gl.bufferData(gl.ARRAY_BUFFER, mesh.geometry.smoothVertices, gl.STATIC_DRAW);
       } else {
         gl.bufferData(gl.ARRAY_BUFFER, mesh.geometry.flatVertices, gl.STATIC_DRAW);
       }
     }
-    if (mesh.selected) {
-      const ostate = this.states.get(-1)!;
+    if (sceneMesh.selected) {
+      const ostate = this.stateMap.get(-1)!;
       gl.useProgram(this.outlineProgram);
       gl.uniformMatrix4fv(ostate.locations['uProjectionMatrix'], false, camera.projectionMatrix.elements);
       gl.uniformMatrix4fv(ostate.locations['uViewMatrix'], false, camera.viewMatrix.elements);
@@ -286,7 +229,7 @@ class WebGLRenderer {
       gl.bindVertexArray(ostate.VAO);
       gl.enable(gl.CULL_FACE);
       gl.cullFace(gl.FRONT);
-      if (mesh.shadeMode === ShadeMode.Smooth) {
+      if (sceneMesh.shadeMode === ShadeMode.Smooth) {
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ostate.VBOs.get('index') || null);
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.geometry.smoothIndices, gl.STATIC_DRAW);
         gl.bindBuffer(gl.ARRAY_BUFFER, ostate.VBOs.get('position') || null);
@@ -305,17 +248,17 @@ class WebGLRenderer {
     gl.uniformMatrix4fv(state.locations['uProjectionMatrix'], false, camera.projectionMatrix.elements);
     gl.uniformMatrix4fv(state.locations['uViewMatrix'], false, camera.viewMatrix.elements);
     gl.uniformMatrix4fv(state.locations['uModelMatrix'], false, mesh.modelMatrix.elements);
-    gl.uniform3fv(state.locations['uColor'], mesh.color.elements);
+    gl.uniform3fv(state.locations['uColor'], sceneMesh.color.elements);
     gl.bindVertexArray(state.VAO);
-    if (mesh.primitiveMode === PrimitiveMode.LINES) {
-      if (mesh.shadeMode === ShadeMode.Smooth) {
+    if (sceneMesh.primitiveMode === PrimitiveMode.LINES) {
+      if (sceneMesh.shadeMode === ShadeMode.Smooth) {
         gl.drawElements(gl.LINES, mesh.geometry.smoothLineIndicesCount, gl.UNSIGNED_INT, 0);
       } else {
         gl.drawElements(gl.LINES, mesh.geometry.flatLineIndicesCount, gl.UNSIGNED_INT, 0);
       }
     } else {
       gl.uniform3f(state.locations['uEye'], camera.position.x, camera.position.y, camera.position.z);
-      if (mesh.shadeMode === ShadeMode.Smooth) {
+      if (sceneMesh.shadeMode === ShadeMode.Smooth) {
         gl.drawElements(gl.TRIANGLES, mesh.geometry.smoothIndicesCount, gl.UNSIGNED_INT, 0);
       } else {
         gl.drawElements(gl.TRIANGLES, mesh.geometry.flatIndicesCount, gl.UNSIGNED_INT, 0);

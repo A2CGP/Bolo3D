@@ -1,21 +1,20 @@
 import { useEffect, useState } from 'react';
 import cx from 'classnames';
 import { ObjectType } from '@/core/classes/Object3D';
-import DrawableObject from '@/core/classes/SceneObject';
-import Mesh from '@/core/classes/Mesh';
+import SceneObject, { SceneMesh } from '@/core/scene/SceneObject';
 import { GeometryType } from '@/core/classes/Geometry';
 import GlobalContext from '@/core/GlobalContext';
-import Scene from '@/core/classes/Scene';
+import Scene from '@/core/scene/Scene';
 import './index.less';
 
-const getClassName = (object: DrawableObject) => {
+const getClassName = (object: SceneObject) => {
   if (object.objectType === ObjectType.Camera) {
     return 'icon-camera-full';
   }
 
-  const mesh = object as Mesh;
+  const mesh = object as SceneMesh;
 
-  switch (mesh.geometry.geometryType) {
+  switch (mesh.item.geometry.geometryType) {
     case GeometryType.Polygon:
       return 'icon-mesh-polygon';
     case GeometryType.Plane:
@@ -32,7 +31,7 @@ const getClassName = (object: DrawableObject) => {
 };
 
 const Outliner = () => {
-  const [objects, setObjects] = useState<DrawableObject[]>([]);
+  const [objects, setObjects] = useState<SceneObject[]>([]);
 
   useEffect(() => {
     const scene = GlobalContext.current.viewport?.scene;

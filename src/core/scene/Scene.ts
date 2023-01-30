@@ -1,11 +1,12 @@
 import EventEmitter from 'events';
-import SceneObject from './SceneObject';
-import Mesh from './Mesh';
-import { Color3 } from '../../math/Color';
-import Floor from '../objects/Floor';
-import MeshCube from '../objects/meshes/MeshCube';
-import MeshTorus from '../objects/meshes/MeshTorus';
-import MeshUVSphere from '../objects/meshes/MeshUVSphere';
+import SceneObject, { SceneMesh, ShadeMode } from './SceneObject';
+import Mesh from '@/core/classes/Mesh';
+import { Color3 } from '@/math/Color';
+import Floor from '@/core/objects/Floor';
+import MeshCube from '@/core/objects/meshes/MeshCube';
+import MeshTorus from '@/core/objects/meshes/MeshTorus';
+import MeshUVSphere from '@/core/objects/meshes/MeshUVSphere';
+import { PrimitiveMode } from '../classes/Primitive';
 
 class Scene extends EventEmitter {
   public clearColor = new Color3(0.24, 0.24, 0.24);
@@ -13,8 +14,11 @@ class Scene extends EventEmitter {
 
   constructor() {
     super();
-    this.add(new Floor());
-    this.add(new MeshCube());
+    const floor = new SceneMesh(new Floor());
+    floor.primitiveMode = PrimitiveMode.LINES;
+    floor.color = new Color3(0.32, 0.32, 0.32);
+    this.add(floor);
+    this.add(new SceneMesh(new MeshCube()));
     this.on('menu-add', (key: string) => {
       let item: Mesh | null = null;
 
@@ -31,7 +35,11 @@ class Scene extends EventEmitter {
       }
       if (item) {
         item.modelMatrix.translate(-Math.random() * 10.0, Math.random() * 5.0, -Math.random() * 10.0);
-        this.add(item);
+        const mesh = new SceneMesh(item);
+        if (key !== 'Cube') {
+          mesh.shadeMode = ShadeMode.Smooth;
+        }
+        this.add(mesh);
       }
     });
   }

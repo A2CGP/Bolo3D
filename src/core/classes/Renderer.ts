@@ -1,14 +1,10 @@
-import Camera from '../cameras/Camera';
-import SceneBase from './SceneBase';
+import type Scene from '@/core/scene/Scene';
+import type Camera from '@/core/cameras/Camera';
 
-abstract class A2Renderer {
-  readonly canvas: HTMLCanvasElement;
-  
-  constructor(canvas: HTMLCanvasElement) {
-    this.canvas = canvas;
-  }
+abstract class Renderer {
+  constructor(public canvas: HTMLCanvasElement) { }
 
-  abstract render(scene: SceneBase, camera: Camera): void;
+  abstract render(scene: Scene, camera: Camera): void;
 }
 
-export default A2Renderer;
+export default Renderer;

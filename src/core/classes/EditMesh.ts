@@ -1,5 +1,3 @@
-import { SceneMesh } from './SceneObject';
-
-class EditMesh extends SceneMesh {}
+class EditMesh { }
 
 export default EditMesh;
