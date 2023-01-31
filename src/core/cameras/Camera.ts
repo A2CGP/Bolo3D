@@ -1,14 +1,12 @@
 import { Matrix4 } from '@/math/Matrix';
 import { Vector3 } from '@/math/Vector';
-import { ObjectType } from '../classes/Object3D';
-import SceneObject from '../scene/SceneObject';
 
 export enum CameraType {
   Perspective,
   Orthographic,
 }
 
-abstract class Camera extends SceneObject {
+abstract class Camera {
   cameraType: CameraType;
 
   position = new Vector3(10.0, 6.0, 6.0);
@@ -22,7 +20,6 @@ abstract class Camera extends SceneObject {
   viewProjectionMatrixInverse = Matrix4.identity();
 
   constructor(type: CameraType) {
-    super(ObjectType.Camera);
     this.cameraType = type;
     this.viewMatrix.lookAt(this.position, this.target, this.up);
   }

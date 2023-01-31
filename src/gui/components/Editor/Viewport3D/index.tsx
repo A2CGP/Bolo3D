@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import Renderer from '@/core/classes/Renderer';
+import Renderer from '@/core/renderers/Renderer';
 import Scene from '@/core/scene/Scene';
 import Camera from '@/core/cameras/Camera';
 import PerspectiveCamera from '@/core/cameras/PerspectiveCamera';

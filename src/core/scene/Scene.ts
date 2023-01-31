@@ -10,12 +10,13 @@ import { PrimitiveMode } from '../classes/Primitive';
 
 class Scene extends EventEmitter {
   public clearColor = new Color3(0.24, 0.24, 0.24);
-  public objectMaps = new Map<number, SceneObject>();
+  public objectMap= new Map<number, SceneObject>();
 
   constructor() {
     super();
     const floor = new SceneMesh(new Floor());
-    floor.primitiveMode = PrimitiveMode.LINES;
+    floor.selectable = false;
+    floor.primitiveMode = PrimitiveMode.Lines;
     floor.color = new Color3(0.32, 0.32, 0.32);
     this.add(floor);
     this.add(new SceneMesh(new MeshCube()));
@@ -34,8 +35,8 @@ class Scene extends EventEmitter {
           break;
       }
       if (item) {
-        item.modelMatrix.translate(-Math.random() * 10.0, Math.random() * 5.0, -Math.random() * 10.0);
         const mesh = new SceneMesh(item);
+        mesh.modelMatrix.translate(-Math.random() * 10.0, Math.random() * 5.0, -Math.random() * 10.0);
         if (key !== 'Cube') {
           mesh.shadeMode = ShadeMode.Smooth;
         }
@@ -45,12 +46,12 @@ class Scene extends EventEmitter {
   }
 
   add(object: SceneObject) {
-    this.objectMaps.set(object.objectId, object);
+    this.objectMap.set(object.id, object);
     this.emit('add', object);
   }
 
   delete(object: SceneObject) {
-    this.objectMaps.delete(object.objectId);
+    this.objectMap.delete(object.id);
     this.emit('delete', object);
   }
 }

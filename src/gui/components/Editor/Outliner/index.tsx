@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import cx from 'classnames';
-import { ObjectType } from '@/core/classes/Object3D';
 import SceneObject, { SceneMesh } from '@/core/scene/SceneObject';
 import { GeometryType } from '@/core/classes/Geometry';
 import GlobalContext from '@/core/GlobalContext';
@@ -8,10 +7,6 @@ import Scene from '@/core/scene/Scene';
 import './index.less';
 
 const getClassName = (object: SceneObject) => {
-  if (object.objectType === ObjectType.Camera) {
-    return 'icon-camera-full';
-  }
-
   const mesh = object as SceneMesh;
 
   switch (mesh.item.geometry.geometryType) {
@@ -37,15 +32,15 @@ const Outliner = () => {
     const scene = GlobalContext.current.viewport?.scene;
 
     if (scene) {
-      let initialObjects = (scene as Scene).objectMaps.values();
+      let initialObjects = (scene as Scene).objectMap.values();
 
       setObjects([...initialObjects]);
       scene.on('add', () => {
-        initialObjects = (scene as Scene).objectMaps.values();
+        initialObjects = (scene as Scene).objectMap.values();
         setObjects([...initialObjects]);
       });
       scene.on('delete', () => {
-        initialObjects = (scene as Scene).objectMaps.values();
+        initialObjects = (scene as Scene).objectMap.values();
         setObjects([...initialObjects]);
       });
     }
@@ -55,7 +50,7 @@ const Outliner = () => {
     <div className='nuwa-editor-outliner'>
       <div className='nuwa-editor-outliner-body'>
       {objects.map((object) => (
-        <div key={object.objectId} className='nuwa-editor-outliner-item'>
+        <div key={object.id} className='nuwa-editor-outliner-item'>
           <span className={cx('iconfont', getClassName(object))}></span>
           <span>{object.displayName}</span>
         </div>

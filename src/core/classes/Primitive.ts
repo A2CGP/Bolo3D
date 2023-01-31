@@ -1,5 +1,5 @@
 export enum PrimitiveMode {
-  POINTS,
-  LINES,
-  TRIANGLES,
+  Points,
+  Lines,
+  Triangles,
 }
